@@ -53,6 +53,10 @@ custom:
 #    - exclude-me-dir/**
 
 functions:
+  authorize:
+    description: Authorizes API keys
+    handler: functions/authorize.handler
+
   register:
     description: Register a user for otp and return a QR code url
     handler: functions/register.handler
@@ -60,6 +64,8 @@ functions:
       - http:
           path: register
           method: post
+          authorizer: authorize
+
   validate:
     description: Validate a user supplied otp
     handler: functions/validate.handler
@@ -67,6 +73,7 @@ functions:
       - http:
           path: validate
           method: post
+          authorizer: authorize
 
 #    Define function environment variables here
 #    environment:

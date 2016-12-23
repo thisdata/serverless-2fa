@@ -9,7 +9,8 @@ var helpers = require('../helpers');
 
 module.exports.handler = (event, context, callback) => {
 
-console.log("VALIDATE TOKEN");
+
+console.log(event);
 
   var body = JSON.parse(event.body)
 
@@ -18,35 +19,28 @@ console.log("VALIDATE TOKEN");
   var userId = body.userId;
   var token = body.token;
 
-
   // Check if the user is already registered
   User.getAsync(customerId, userId).then(function(user){
 
     var secretKey = user.get('secretKey');
     var key = helpers.decryptText(secretKey, apiKey);
 
-
     var tokenStatus = notp.totp.verify(token, key);
-
-console.log("TOKEN STATUS");
-console.log(tokenStatus);
 
     var valid = tokenStatus != null
 
-    var response = {
-      statusCode: 200,
-      body: valid,
-    };
+    var response = JSON.stringify({
+      userId: userId,
+      token: token,
+      valid: valid
+    });
 
-    callback(null, response);
+    callback(null, { statusCode: 200, body: response });
 
+  })
+  .error(function(e){
 
-  }).error(function(e){
-
-console.log("VALIDATE TOKEN ERROR");
-    console.log(e);
-    callback(null, { statusCode: 500, body: e });
+    callback(null, { statusCode: 500, body: JSON.stringify(e) });
 
   });
-
 };

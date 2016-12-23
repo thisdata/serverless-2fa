@@ -8,10 +8,7 @@ var helpers = require('../helpers');
 
 module.exports.handler = (event, context, callback) => {
 
-console.log('REGISTER USER');
-
   var body = JSON.parse(event.body)
-
   var apiKey = 'blah';
   var customerId = 'customer1';
   var userId = body.userId;
@@ -33,20 +30,11 @@ console.log('REGISTER USER');
     });
 
 
-  }).then(function(user){
-
-console.log("DO THE KEY PART")
-
-console.log(user);
+  })
+  .then(function(user){
 
     var secretKey = user.get("secretKey");
-
-console.log("SK: " + secretKey);
-
-
     var key = helpers.decryptText(secretKey, apiKey);
-
-console.log("Key: " + key);
 
     // encoded will be the secret key, base32 encoded
     var encoded = base32.encode(key);
@@ -65,10 +53,10 @@ console.log("Key: " + key);
     callback(null, { statusCode: 200, body: response });
 
 
-  }).error(function(e){
+  })
+  .error(function(e){
 
-    console.log(e);
-    callback(null, { statusCode: 500, body: e });
+    callback(null, { statusCode: 500, body: JSON.stringify(e) });
 
   });
 
