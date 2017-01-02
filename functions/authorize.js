@@ -2,20 +2,34 @@
 
 var AWS = require('aws-sdk');
 
-module.exports.handler = (event, context, callback) => {
+module.exports.handler = (event, context) => {
 
 console.log(event);
 
-  var methodArn = event.methodArn.split('/');
-  var baseArn = methodArn[0] + "/" + methodArn[1]
+  var token = event.authorizationToken;
 
-  var resources = [
-    baseArn + "/POST/validate",
-    baseArn + "/POST/register"
-  ];
+  if (token == 'xx'){
+
+    var customerId = '1234';
+
+    var policy = generatePolicy(event.methodArn, customerId);
+
+console.log(policy);
+
+    context.succeed(policy);
+  }else{
+    context.fail('Not Authorized');
+  }
+
+};
+
+function generatePolicy(methodArn, customerId)
+{
+  methodArn = methodArn.split('/');
+  var baseArn = methodArn[0] + '/' + methodArn[1];
 
   var policy = {
-    "principalId": "xxxxxxx", // Unique customer id
+    "principalId": customerId,
     "policyDocument": {
       "Version": "2012-10-17",
       "Statement": [
@@ -24,40 +38,14 @@ console.log(event);
           "Action": [
             "execute-api:Invoke"
           ],
-          "Resource": resources
+          "Resource": [
+            baseArn + "/POST/validate",
+            baseArn + "/POST/register"
+          ]
         }
       ]
     }
   };
 
-
-
-console.log(policy);
-
-  callback(null, policy);
-
-  // try {
-
-  //   // parse the ARN from the incoming event
-  //   var apiOptions = {};
-  //   var tmp = event.methodArn.split(':');
-  //   var apiGatewayArnTmp = tmp[5].split('/');
-  //   var awsAccountId = tmp[4];
-  //   apiOptions.region = tmp[3];
-  //   apiOptions.restApiId = apiGatewayArnTmp[0];
-  //   apiOptions.stage = apiGatewayArnTmp[1];
-
-  //   policy = new AuthPolicy(verifiedJwt.body.sub, awsAccountId, apiOptions);
-
-  //   policy.allowMethod(AuthPolicy.HttpVerb.POST, "/register");
-  //   policy.allowMethod(AuthPolicy.HttpVerb.POST, "/validate");
-
-  //   context.succeed(policy.build());
-
-  // } catch (ex) {
-  //   console.log(ex, ex.stack);
-  //   context.fail("Kapow! Denied....");
-  // }
-
-
-};
+  return policy;
+}

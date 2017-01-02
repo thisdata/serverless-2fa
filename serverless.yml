@@ -30,17 +30,21 @@ provider:
         - dynamodb:GetItem
         - dynamodb:PutItem
         - dynamodb:UpdateItem
-      Resource: arn:aws:dynamodb:*:*:table/${self:custom.usersTableName}
+      Resource:
+        - arn:aws:dynamodb:*:*:table/${self:custom.usersTableName}
+        - arn:aws:dynamodb:*:*:table/${self:custom.customersTableName}
 
 # Service wide environment variables
   environment:
     REGION: ${self:provider.region}
     USERS_TABLE_NAME: ${self:custom.usersTableName}
+    CUSTOMERS_TABLE_NAME: ${self:custom.customersTableName}
 
 # Custom variables
 custom:
   stage: ${opt:stage, self:provider.stage}
   usersTableName: ${self:service}-users-${self:custom.stage}
+  customersTableName: ${self:service}-customers-${self:custom.stage}
 
 
 # you can add packaging information here
