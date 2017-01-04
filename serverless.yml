@@ -23,6 +23,10 @@ provider:
   stage: dev
   region: us-west-2
 
+  # Authorization
+  apiKeys:
+    - ${self:service}-api-key
+
   # Default IAM role access
   iamRoleStatements:
     - Effect: Allow
@@ -32,19 +36,17 @@ provider:
         - dynamodb:UpdateItem
       Resource:
         - arn:aws:dynamodb:*:*:table/${self:custom.usersTableName}
-        - arn:aws:dynamodb:*:*:table/${self:custom.customersTableName}
 
 # Service wide environment variables
   environment:
+    SERVICE_NAME: ${self:service}
     REGION: ${self:provider.region}
     USERS_TABLE_NAME: ${self:custom.usersTableName}
-    CUSTOMERS_TABLE_NAME: ${self:custom.customersTableName}
 
 # Custom variables
 custom:
   stage: ${opt:stage, self:provider.stage}
   usersTableName: ${self:service}-users-${self:custom.stage}
-  customersTableName: ${self:service}-customers-${self:custom.stage}
 
 
 # you can add packaging information here
@@ -57,9 +59,6 @@ custom:
 #    - exclude-me-dir/**
 
 functions:
-  authorize:
-    description: Authorizes API keys
-    handler: functions/authorize.handler
 
   register:
     description: Register a user for otp and return a QR code url
@@ -68,7 +67,7 @@ functions:
       - http:
           path: register
           method: post
-          authorizer: authorize
+          private: true
 
   validate:
     description: Validate a user supplied otp
@@ -77,12 +76,7 @@ functions:
       - http:
           path: validate
           method: post
-          authorizer: authorize
-
-#    Define function environment variables here
-#    environment:
-#      variable2: value2
-
+          private: true
 
 
 resources:
@@ -92,13 +86,9 @@ resources:
       Properties:
         TableName: ${self:custom.usersTableName}
         KeySchema:
-          - AttributeName: customerId
-            KeyType: HASH
           - AttributeName: userId
-            KeyType: RANGE
+            KeyType: HASH
         AttributeDefinitions:
-          - AttributeName: customerId
-            AttributeType: S
           - AttributeName: userId
             AttributeType: S
         ProvisionedThroughput:

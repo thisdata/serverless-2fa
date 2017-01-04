@@ -10,12 +10,11 @@ module.exports.handler = (event, context, callback) => {
 
   var body = JSON.parse(event.body)
   var apiKey = 'blah';
-  var customerId = 'customer1';
   var userId = body.userId;
 
 
   // Check if the user is already registered
-  User.getAsync(customerId, userId).then(function(user){
+  User.getAsync(userId).then(function(user){
 
     if(user)
       return user;
@@ -24,11 +23,10 @@ module.exports.handler = (event, context, callback) => {
     var key = crypto.randomBytes(20).toString('hex');
 
     return User.createAsync({
-        customerId: customerId,
         userId: userId,
+        name: body.name,
         secretKey: helpers.encryptText(key, apiKey)
     });
-
 
   })
   .then(function(user){
@@ -43,7 +41,7 @@ module.exports.handler = (event, context, callback) => {
     var encodedForGoogle = encoded.toString().replace(/=/g,'');
 
     // to create a URI for a qr code (change totp to hotp if using hotp)
-    var uri = 'otpauth://totp/somelabel?secret=' + encodedForGoogle;
+    var uri = 'otpauth://totp/' + process.env.SERVICE_NAME + '?secret=' + encodedForGoogle;
 
     var response = JSON.stringify({
       userId: userId,
@@ -51,7 +49,6 @@ module.exports.handler = (event, context, callback) => {
     });
 
     callback(null, { statusCode: 200, body: response });
-
 
   })
   .error(function(e){
